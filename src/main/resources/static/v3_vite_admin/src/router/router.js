@@ -2,17 +2,18 @@ import Layout from "../layout/Index.vue";
 import RouteView from "../components/RouteView.vue";
 
 const layoutMap = [
+
     {
-        path: "",
+        path: "account",
         name: "Index",
-        meta: { title: "火眼金睛", icon: "View" },
+        meta: { title: "火眼金睛", icon: "View" , roles: ["user"] },
         component: () => import("../views/Index.vue")
     },
     {
-        path: "data",
+        path: "account/data",
         name: "Data",
         component: RouteView,
-        meta: { title: "数据管理", icon: "DataLine" },
+        meta: { title: "数据管理", icon: "DataLine" , roles: ["user"] },
         children: [
             {
                 path: "",
@@ -20,54 +21,54 @@ const layoutMap = [
                 meta: { title: "数据列表" },
                 component: () => import("../views/data/List.vue")
             },
-            {
-                path: "table",
-                name: "DataTable",
-                meta: { title: "数据表格", roles: ["admin"] },
-                component: () => import("../views/data/Table.vue")
-            }
+            // {
+            //     path: "table",
+            //     name: "DataTable",
+            //     meta: { title: "数据表格", roles: ["admin"] },
+            //     component: () => import("../views/data/Table.vue")
+            // }
         ]
     },
+    // {
+    //     path: "admin",
+    //     name: "Admin",
+    //     meta: { title: "用户管理", icon: "User", roles: ["admin"] },
+    //     component: RouteView,
+    //     children: [
+    //         {
+    //             path: "",
+    //             name: "AdminAuth",
+    //             meta: { title: "用户列表" },
+    //             component: () => import("../views/admin/AuthList.vue")
+    //         },
+    //         {
+    //             path: "role",
+    //             name: "AdminRole",
+    //             meta: { title: "角色列表" },
+    //             component: () => import("../views/admin/RoleList.vue")
+    //         }
+    //     ]
+    // },
     {
-        path: "admin",
-        name: "Admin",
-        meta: { title: "用户管理", icon: "User", roles: ["admin"] },
-        component: RouteView,
-        children: [
-            {
-                path: "",
-                name: "AdminAuth",
-                meta: { title: "用户列表" },
-                component: () => import("../views/admin/AuthList.vue")
-            },
-            {
-                path: "role",
-                name: "AdminRole",
-                meta: { title: "角色列表" },
-                component: () => import("../views/admin/RoleList.vue")
-            }
-        ]
-    },
-    {
-        path: "player",
+        path: "account/player",
         name: "Player",
-        meta: { title: "视频播放", icon: "Film" },
+        meta: { title: "视频播放", icon: "Film" , roles: ["user"] },
         component: () => import("../views/common/XGPlayer.vue")
     },
     {
-        path: "charts",
+        path: "account/charts",
         name: "Charts",
-        meta: { title: "数据图表", icon: "trend-charts" },
+        meta: { title: "数据图表", icon: "trend-charts" , roles: ["user"] },
         component: () => import("../views/data/Charts.vue")
     },
     {
-        path: "editor",
+        path: "account/editor",
         name: "Editor",
-        meta: { title: "富文本编辑器", icon: "Document" },
+        meta: { title: "富文本编辑器", icon: "Document" , roles: ["user"] },
         component: () => import("../views/common/Editor.vue")
     },
     {
-        path: "user",
+        path: "account/user",
         name: "User",
         hidden: true /* 不在侧边导航展示 */,
         meta: { title: "个人中心" },
@@ -89,10 +90,10 @@ const layoutMap = [
 
     // ================================
     {
-        path: "news",
+        path: "account/news",
         name: "News",
         component: RouteView,
-        meta: { title: "舆情侦探", icon: "DataLine" },
+        meta: { title: "舆情侦探", icon: "DataLine" , roles: ["user"] },
         // children: [
         //     {
         //         path: "",
@@ -112,7 +113,7 @@ const layoutMap = [
     },
 
     {
-        path: "upload",
+        path: "account/upload",
         name: "NewsUpload",
         hidden: true /* 不在侧边导航展示 */,
         meta: { title: "舆情上传"},
@@ -120,7 +121,7 @@ const layoutMap = [
     },
 
     {
-        path: "record",
+        path: "account/record",
         name: "Record",
         hidden: true /* 不在侧边导航展示 */,
         meta: { title: "舆情记录"},
@@ -128,10 +129,10 @@ const layoutMap = [
     },
 
     {
-        path: "hot",
+        path: "account/hot",
         name: "Hot",
         component: RouteView,
-        meta: { title: "舆情热点", icon: "DataLine" },
+        meta: { title: "舆情热点", icon: "DataLine" , roles: ["user"] },
         children: [
             {
                 path: "",
@@ -148,11 +149,11 @@ const layoutMap = [
         ]
     },
     {
-        path: "user",
+        path: "account/user",
         name: "User",
         // hidden: true /* 不在侧边导航展示 */,
         component: RouteView,
-        meta: { title: "个人中心", icon: "User" },
+        meta: { title: "个人中心", icon: "User" , roles: ["user"] },
         children: [
             {
                 path: "",
@@ -188,6 +189,33 @@ const layoutMap = [
     //     meta: { title: "舆情界面" },
     //     component: () => import("../views/detective/Station.vue")
     // },
+
+
+    //===================管理端===================
+    {
+        path: "contor/show",
+        name: "Show",
+        meta: { title: "首页" , roles: ["admin"] , icon: "View" },
+        component: () => import("../views/contor/show/Show.vue")
+    },
+    {
+        path: "contor/news_ack",
+        name: "News_ack",
+        meta: { title: "舆情审核" , roles: ["admin"] , icon: "View" },
+        component: () => import("../views/contor/news_ack/News_ack.vue")
+    },
+    {
+        path: "contor/hot_push",
+        name: "Hot_push",
+        meta: { title: "热点发布" , roles: ["admin"] , icon: "View" },
+        component: () => import("../views/contor/hot_push/Hot_push.vue")
+    },
+    {
+        path: "contor/record_history",
+        name: "Record_history",
+        meta: { title: "兑换记录" , roles: ["admin"] , icon: "View" },
+        component: () => import("../views/contor/record_history/Record_history.vue")
+    },
 ];
 
 const routes = [
