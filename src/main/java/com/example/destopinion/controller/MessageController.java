@@ -11,13 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MessageController {
 
     @Autowired
-    private KafkaTemplate<String,String> kafkaTemplate;//通过当前数据发送到指定集群
+    private KafkaTemplate kafkaTemplate;//通过当前数据发送到指定集群
 
-    @GetMapping(value = "/sendMessage/{msg}")
-    public String sendMessage(@PathVariable("msg") String msg){
-       kafkaTemplate.send("test1",msg);
-
-       return "ok";
-    }
 
 }

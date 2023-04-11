@@ -3,7 +3,6 @@ package com.example.destopinion.config;
 
 import com.example.destopinion.common.JacksonObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -18,16 +17,13 @@ import java.util.List;
 public class WebMvcConfig extends WebMvcConfigurationSupport {
     //进行静态资源的映射，否则默认必须在static或者template下面的资源
 
-//    @Override
-//    protected void addResourceHandlers(ResourceHandlerRegistry registry) {
-//        log.info("开启静态资源映射");
-//        //前两个是swagger的
-//        registry.addResourceHandler("doc.html").addResourceLocations("classpath:/META-INF/resources/");
-//        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
-//        registry.addResourceHandler("/backend/**").addResourceLocations("classpath:/backend/");
-//
-//        registry.addResourceHandler("/front/**").addResourceLocations("classpath:/front/");
-//    }
+    @Override
+    protected void addResourceHandlers(ResourceHandlerRegistry registry) {
+        log.info("开启静态资源映射");
+        //前两个是swagger的
+        //registry.addResourceHandler("doc.html").addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
+    }
 
     /**
      * 扩展mvc框架的消息转化器

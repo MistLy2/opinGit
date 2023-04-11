@@ -13,11 +13,16 @@ public class PersonServiceImpl extends ServiceImpl<PersonMapper, Person> impleme
 
     @Autowired
     private  PersonService personService;
+
     public String looked(Long userId){
         LambdaQueryWrapper<Person> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Person::getUserId,userId);
 
         Person one = personService.getOne(wrapper);
-        return one.getNumber();
+        if(one == null){
+            return "null";
+        }
+
+        return one.getNumber()==null?"fe":one.getNumber();
     }
 }

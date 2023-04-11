@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 80
 #  用postman接口测试时，这里的端口要默认是80，否则会无法连接
 
 spring:
@@ -12,7 +12,21 @@ spring:
     name: user-service
   #    kafka消费者模式
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: 124.223.59.64:9092
+    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      batch-size: 131072  #128kb
+      buffer-memory: 67108864 #64M
+        #max-request-size: 5242880
+        #linger-ms: 5
+      retries: 1
+      acks: 0
+      compression-type: gzip  #提升性能很重要
+      properties:
+          max.request.size: 5242880 #5M
+          linger.ms: 5
+
     consumer: # consumer消费者
       group-id: mentugroup # 默认的消费组ID
       enable-auto-commit: true # 是否自动提交offset
@@ -21,19 +35,20 @@ spring:
       # latest:当各分区下有已提交的offset时，从提交的offset开始消费；无提交的offset时，消费新产生的该分区下的数据
       # none:topic各分区都存在已提交的offset时，从offset后开始消费；只要有一个分区不存在已提交的offset，则抛出异常
       auto-offset-reset: latest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/opinion_project?serverTimezone=Asia/Shanghai&useUnicode=true&
+    url: jdbc:mysql://124.223.59.64:3306/opinion_project?serverTimezone=Asia/Shanghai&useUnicode=true&
       characterEncoding=utf-8&useSSL=false
     username: root
-    password:
+    password: 200211
+#    云服务器mysql密码
   redis:
-    host: localhost
+    host: 124.223.59.64
     port: 6379
-    #password: 123456  如果有密码就需要
+    #password: 200211  如果有密码就需要
     database: 0
     jedis:
       pool:
@@ -41,13 +56,10 @@ spring:
         max-idle: 4
         min-idle: 0
         max-wait: 1ms #连接池最大阻塞等待时间
+    password: 200211
   cache:
     redis:
       time-to-live: 1800000 #设置缓存数据的缓存时间
-
-  view:
-    prefix: /
-    suffix: .html
 #  mvc:
 #    view:
 #      prefix: /
@@ -64,7 +76,5 @@ mybatis-plus:
 #      这里要注意一定要设置id为自增，系统默认为雪花算法形成的无规则id
 # 进行一个mp日志的打印,设置为标准输出流打印,开启日志后就能看到mp执行过程和sql执行过程
 tess4j:
-  data-path: D:\tessdata
+  data-path: \root\file
   language: chi_sim
-opinion-service:
-  path: D:\tessdata\picture\

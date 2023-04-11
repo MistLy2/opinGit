@@ -34,6 +34,7 @@ public class UserController {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
     private PersonService personService;
 
 
@@ -110,8 +111,8 @@ public class UserController {
 
     //根据id查找指定用户
     @GetMapping("/find/{id}")
-    public User find(@PathVariable Long id){
-        return userService.finded(id);
+    public R find(@PathVariable Long id){
+        return R.success(userService.finded(id));
     }
 
     //用户修改功能
@@ -147,7 +148,7 @@ public class UserController {
         }
         String number = personService.looked(one.getId());
 
-        if(number == null){
+        if(number.equals("null")){
             return R.error("对不起 您的电话号为空");
         }
         if(number.equals(userDto.getNumber())){
@@ -158,12 +159,6 @@ public class UserController {
         }
         //电话号不相同返回错误
         return R.error("您的电话号不正确");
-    }
-
-    //kafka消费者测试
-    @KafkaListener(topics = "first")
-    public void consume(String msg){
-        System.out.println(msg);
     }
 
 }

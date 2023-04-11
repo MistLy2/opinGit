@@ -30,8 +30,8 @@ import java.util.Map;
 @RestController
 public class CommonController {
 
-    @Value("${opinion-service.path}")
-    private String basePath;
+//    @Value("${opinion-service.path}")
+//    private String basePath;
 
     @Autowired
     private LikedService likedService;
@@ -142,6 +142,7 @@ public class CommonController {
         Liked one = likedService.getOne(wrapper);
         if(one != null){
             likedService.updateById(one);
+            return;
         }
         likedService.save(liked);
     }

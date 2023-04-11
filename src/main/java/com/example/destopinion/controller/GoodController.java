@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,8 +26,6 @@ public class GoodController {
     @Autowired
     private GoodService goodService;
 
-    @Autowired
-    private KafkaTemplate<String,String> kafkaTemplate;
 
     @Autowired
     private UserService userService;
@@ -42,7 +39,6 @@ public class GoodController {
         //利用动态key 设置redis缓存
         //这里注意如果数据发生修改，则需要删除redis中的缓存，从数据库中获取
         String key = "goods";
-        kafkaTemplate.send("first","hello");
         LambdaQueryWrapper<Good> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByAsc(Good::getScoreNumber);
 

@@ -1,5 +1,6 @@
 package com.example.destopinion.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.destopinion.config.BaseContext;
 import com.example.destopinion.config.R;
@@ -8,8 +9,11 @@ import com.example.destopinion.entity.Opinion;
 import com.example.destopinion.service.OpinionService;
 import com.example.destopinion.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.PartitionInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -31,8 +35,8 @@ import java.util.Set;
 //使用kafka减小并发写情况下压力骤增问题
 public class OpinionController {
 
-    @Value("${opinion-service.path}")
-    private String basePath;
+//    @Value("${opinion-service.path}")
+//    private String basePath;
 
     @Autowired
     private OpinionService opinionService;
@@ -45,7 +49,7 @@ public class OpinionController {
 
 
     @Autowired
-    private KafkaTemplate<String,Object> kafkaTemplate;
+    private KafkaTemplate kafkaTemplate;
 
     @Autowired
     private DefaultRedisScript<Boolean> defaultRedisScript;
@@ -63,7 +67,8 @@ public class OpinionController {
         opinion.setUserId(userId);
         //这里可以先将消息存入kafka，然后缓慢写入数据库
         //opinionService.save(opinion);
-        kafkaTemplate.send("addOpinion",opinion);
+
+        kafkaTemplate.send("addOpinion","fa",opinion);
 
         //舆论数据发生更改需要删除缓存，重新查询数据库
         redisTemplate.delete(key);
@@ -72,6 +77,7 @@ public class OpinionController {
     }
     @KafkaListener(topics = "addOpinion")
     public void addOpinion(Opinion opinion){
+        System.out.println(opinion);
         opinionService.save(opinion);
     }
 
@@ -91,7 +97,7 @@ public class OpinionController {
         LambdaQueryWrapper<Opinion> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Opinion::getState,1);
         List<Opinion> opinionList = opinionService.list(wrapper);
-        if(opinionList != null){
+        if(opinionList.size()!=0){
             redisTemplate.opsForValue().set(key,opinionList);
         }
 
@@ -155,6 +161,7 @@ public class OpinionController {
 
         //这里也可以存入kafka，然后缓慢修改数据库，减小并发压力
         //opinionService.updateById(opinion);
+
         kafkaTemplate.send("updateOpinionState",opinion);
 
         //此时应该删除redis中存有的舆论数据
@@ -186,7 +193,8 @@ public class OpinionController {
         LambdaQueryWrapper<Opinion> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Opinion::getState,0);
         List<Opinion> opinionList = opinionService.list(wrapper);
-        if(opinionList != null){
+        System.out.println(opinionList);
+        if(opinionList.size()!=0){
             redisTemplate.opsForValue().set(key,opinionList);
         }
 
@@ -242,13 +250,14 @@ public class OpinionController {
        likes.add(opinionId+"");
        likes.add(value+"");
 
-       //先观察redis里面是否有当前数据，没有的话先载入
-       double o = (double)redisTemplate.opsForZSet().score("sortSet", buildOpinionRedisKey(opinionId));
-       if(o == 0.0){
-           //如果为空，说明已经失效，重新加载
-           double count = (double)opinionService.getById(opinionId).getLikeNumber();
-           redisTemplate.opsForZSet().add("sortSet",buildOpinionRedisKey(opinionId),count);
-       }
+//       //先观察redis里面是否有当前数据，没有的话先载入
+//       Double o = redisTemplate.opsForZSet().score("sortSet", buildOpinionRedisKey(opinionId));
+//
+//       if(o == null){
+//           //如果为空，说明已经失效，重新加载
+//           double count = opinionService.getById(opinionId).getLikeNumber();
+//           redisTemplate.opsForZSet().add("sortSet",buildOpinionRedisKey(opinionId),count);
+//       }
 
       Boolean isTrue=(Boolean) redisTemplate.execute(defaultRedisScript,keys,value+"");
        //System.out.println("到这里了");
@@ -334,28 +343,33 @@ public class OpinionController {
         //查询后返回
         return search(result);
     }
-    public byte[] goFile(String name) {
-
-        InputStream inputStream = null;
-        try {
-            inputStream = new FileInputStream(basePath+name);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        byte[] buff = new byte[100];
-        int rc = 0;
-        while (true) {
-            try {
-                if (!((rc = inputStream.read(buff, 0, 100)) > 0)) break;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            byteArrayOutputStream.write(buff, 0, rc);
-        }
-        return byteArrayOutputStream.toByteArray();
-
+//    public byte[] goFile(String name) {
+//
+//        InputStream inputStream = null;
+//        try {
+//            inputStream = new FileInputStream(basePath+name);
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//
+//        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//        byte[] buff = new byte[100];
+//        int rc = 0;
+//        while (true) {
+//            try {
+//                if (!((rc = inputStream.read(buff, 0, 100)) > 0)) break;
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            byteArrayOutputStream.write(buff, 0, rc);
+//        }
+//        return byteArrayOutputStream.toByteArray();
+//
+//    }
+    @EventListener(ApplicationReadyEvent.class)
+    public void init() {
+        List<PartitionInfo> partitionInfos = kafkaTemplate.partitionsFor("addOpinion");
+        partitionInfos.forEach(info -> System.out.println(info));
     }
 
 }
