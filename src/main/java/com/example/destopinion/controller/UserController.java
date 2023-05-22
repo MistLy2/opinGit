@@ -3,6 +3,7 @@ package com.example.destopinion.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.destopinion.config.BaseContext;
 import com.example.destopinion.config.R;
+import com.example.destopinion.config.SaltGenerator;
 import com.example.destopinion.dto.UpdateDto;
 import com.example.destopinion.dto.UserDto;
 import com.example.destopinion.entity.User;
@@ -12,12 +13,8 @@ import com.example.destopinion.util.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 
@@ -32,9 +29,6 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private RedisTemplate redisTemplate;
-
-    @Autowired
     private PersonService personService;
 
 
@@ -45,42 +39,31 @@ public class UserController {
         //System.out.println("进来了");
         String account = map.get("account").toString();
 
-        String password = DigestUtils.md5DigestAsHex(map.get("password").toString().getBytes());
+        String password = map.get("password").toString();
+
+        String admin = map.get("admin").toString();
 
         System.out.println(map);
-        //Object attribute = session.getAttribute(phone);
-        //这个account就从redis中进行获取了
-        User attribute = (User)redisTemplate.opsForValue().get(BaseContext.getId());
 
-        if(attribute!=null && attribute.getPassword().equals(password)){
-            //说明redis里面存在账号密码，登录即可
-
-            session.setAttribute("user",attribute.getId());
-            String token = JwtUtils.getJwtToken(attribute.getId(),account);//生成令牌
-
-            BaseContext.setId(attribute.getId());//将用户id存入当前线程
-
-            UserDto userDto = new UserDto();
-            userDto.setUser(attribute);
-            userDto.setToken(token);
-
-            return R.success(userDto);
-        }
         //如果redis没有命中，就需要去数据库中查找
         //如果存在就登录，并存到redis中，如果不存在就返回登录失败
         LambdaQueryWrapper<User> wrap = new LambdaQueryWrapper<User>();
-        wrap.eq(User::getAccount,account)
-                .eq(User::getPassword,password);
+        wrap.eq(User::getAccount,account);
 
-        User uu=userService.getOne(wrap);
+        User uu=userService.getOne(wrap);//判断密码相同即可
         if(uu != null){
-            //说明用户存在,存入redis并返回即可
             //暂时不设置过期时间
-            redisTemplate.opsForValue().set(uu.getId(),uu);
+            //判断密码是否相等
+            String password1 = uu.getPassword();
+            String salt = password1.split(":")[1];//拿到盐值
+            if(!password1.equals(salt+password) && uu.getAdmin()!=Integer.valueOf(admin)){
+                return R.error("密码错误 或 您不是管理员");
+            }
+
             session.setAttribute("user",uu.getId());
             BaseContext.setId(uu.getId());
 
-            String token = JwtUtils.getJwtToken(uu.getId(),account);//生成令牌
+            String token = JwtUtils.getJwtToken(BaseContext.getId(),account);//生成令牌
 
             UserDto userDto1 = new UserDto();
             userDto1.setUser(uu);
@@ -89,7 +72,6 @@ public class UserController {
             return R.success(userDto1);
 
         }
-
         return R.error("账号或密码错误，请重试");
     }
     //注册功能
@@ -99,12 +81,16 @@ public class UserController {
 
         String password = map.get("password").toString();
 
+        String admin = map.get("admin").toString();
+
         User user = new User();
-        user.setAccount(account);
-        user.setPassword(DigestUtils.md5DigestAsHex(password.getBytes()));
+        user.setAccount(account);//这里密码用加密加盐进行
+
+        String p = DigestUtils.md5DigestAsHex(password.getBytes())+":"+SaltGenerator.getSalt();
+        user.setPassword(p);//加密加盐存储
+        user.setAdmin(Integer.parseInt(admin));
 
         userService.save(user);//mp的根据自动雪花算法会生成用户id
-        //注意业务逻辑，这里注册后user表发生变化，需要更新redis
 
         return R.success("注册成功，请返回登录");
     }
@@ -124,17 +110,17 @@ public class UserController {
 
     //修改用户信任值
     @PostMapping("/trust")
-    public String trust(int type){
+    public String trust(int type,Long userId){
         return userService.trusted(type);
     }
 
-    //token验证,每一次页面跳转的时候进行token验证
-    @GetMapping("/checkToken")
-    public Boolean checkToken(HttpServletRequest request){
-        String token = request.getHeader("token");
-
-        return JwtUtils.checkToken(token);
-    }
+//    //token验证,每一次页面跳转的时候进行token验证
+//    @GetMapping("/checkToken")
+//    public Boolean checkToken(HttpServletRequest request){
+//        String token = request.getHeader("token");
+//
+//        return JwtUtils.checkToken(token);
+//    }
 
     //修改密码  也是忘记密码
     @PostMapping("/up")
@@ -153,12 +139,13 @@ public class UserController {
         }
         if(number.equals(userDto.getNumber())){
             //如果电话号相同，修改密码即可
-            one.setPassword(DigestUtils.md5DigestAsHex(userDto.getPassword().getBytes()));
+            String p = one.getPassword();
+            String salt = p.split(":")[1];
+            one.setPassword(DigestUtils.md5DigestAsHex(userDto.getPassword().getBytes())+":"+salt);
             userService.updateById(one);
             return R.success("修改成功");
         }
         //电话号不相同返回错误
         return R.error("您的电话号不正确");
     }
-
 }

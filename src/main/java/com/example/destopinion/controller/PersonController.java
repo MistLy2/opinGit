@@ -12,7 +12,6 @@ import com.example.destopinion.util.RSAUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.crypto.BadPaddingException;
@@ -34,8 +33,6 @@ public class PersonController {
     @Autowired
     private PersonService personService;
 
-    @Autowired
-    private RedisTemplate redisTemplate;
 
     private final KeyPair keyPair;
 
@@ -50,19 +47,13 @@ public class PersonController {
         //直接利用ThreadLocal 进行用户id的获取并且展示即可
         Long userId = BaseContext.getId();//能到当前界面肯定是已经登录了的
 
-        //先去查询redis有没有当前数据
-        Person person = (Person)redisTemplate.opsForValue().get(userId + "person");
-        byte[] encrypt1 = RSAUtils.encrypt(JSON.toJSONString(person).getBytes(), keyPair.getPublic());//公钥加密
-        if(person != null){
-            return R.success(new String(encrypt1));
-        }
-        //然后和数据库进行联合查询
         LambdaQueryWrapper<Person> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Person::getUserId,userId);
 
         Person one = personService.getOne(wrapper);
-        //查询到后存入redis缓存
-        redisTemplate.opsForValue().set(userId+"person",one);
+        if(one == null){
+            return R.success("");//返回数据为空
+        }
 
         //加密后返回类型
         byte[] encrypt = RSAUtils.encrypt(JSON.toJSONString(one).getBytes(), keyPair.getPublic());//公钥加密

@@ -22,19 +22,6 @@ public class RSAUtils {
         generator.initialize(2048, new SecureRandom());
         return generator.generateKeyPair();
     }
-
-    public static PublicKey getPublicKey(byte[] publicKeyBytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKeyBytes);
-        KeyFactory factory = KeyFactory.getInstance(ALGORITHM, PROVIDER);
-        return factory.generatePublic(spec);
-    }
-
-    public static PrivateKey getPrivateKey(byte[] privateKeyBytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
-        KeyFactory factory = KeyFactory.getInstance(ALGORITHM, PROVIDER);
-        return factory.generatePrivate(spec);
-    }
-
     public static byte[] encrypt(byte[] data, PublicKey publicKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, IllegalBlockSizeException, BadPaddingException {
         Cipher cipher = Cipher.getInstance(ALGORITHM, PROVIDER);
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
@@ -59,4 +46,18 @@ public class RSAUtils {
         signature.update(data);
         return signature.sign();
     }
+
+    public static PublicKey getPublicKey(byte[] publicKeyBytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKeyBytes);
+        KeyFactory factory = KeyFactory.getInstance(ALGORITHM, PROVIDER);
+        return factory.generatePublic(spec);
+    }
+
+    public static PrivateKey getPrivateKey(byte[] privateKeyBytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
+        KeyFactory factory = KeyFactory.getInstance(ALGORITHM, PROVIDER);
+        return factory.generatePrivate(spec);
+    }
+
+
 }

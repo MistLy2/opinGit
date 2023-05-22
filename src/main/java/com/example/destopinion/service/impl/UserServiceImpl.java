@@ -19,8 +19,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     private RedisTemplate redisTemplate;
 
     public String trusted(int type){
-        User user= (User)redisTemplate.opsForValue().get(BaseContext.getId());
-        if(user != null){
+        Object o = redisTemplate.opsForValue().get(BaseContext.getId()+"");
+        if(o != null){
+            User user = (User) o;
             if(type ==1){
                 user.setTrustValue(user.getTrustValue() + 20);
                 userService.updateById(user);
@@ -37,11 +38,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         User one = userService.getOne(wrapper);
 
         if(type ==1){
-            one.setTrustValue(user.getTrustValue() + 20);
-            userService.updateById(user);
+            one.setTrustValue(one.getTrustValue() + 20);
+            userService.updateById(one);
         }else {
-            one.setTrustValue(user.getTrustValue() - 20);
-            userService.updateById(user);
+            one.setTrustValue(one.getTrustValue() - 20);
+            userService.updateById(one);
         }
         redisTemplate.opsForValue().set(one.getId()+"",one);//存入redis
 

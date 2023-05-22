@@ -20,4 +20,6 @@ public class User implements Serializable {
     private int score;//积分
 
     private int trustValue;//信任值
+
+    private int admin;//默认为0，不是管理员
 }

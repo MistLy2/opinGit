@@ -9,7 +9,7 @@ public class BaseContext {
     }
 
     public static Long getId(){
-        return 1L;
-        //return threadLocal.get();
+        //return 1111L;
+        return threadLocal.get();
     }
 }

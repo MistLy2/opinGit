@@ -59,12 +59,7 @@ public class JwtUtils {
             //如果解析异常，则说明身份验证不成功
             return false;
         }
-        if(Objects.equals(uid, BaseContext.getId())){
-            //说明用户正确，鉴权成功
-            return true;
-        }else{
-            //说明用户不正确
-            return false;
-        }
+
+        return true;
     }
 }
